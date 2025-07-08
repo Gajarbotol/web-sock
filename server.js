@@ -168,7 +168,7 @@ wss.on('connection', (ws, req) => {
 });
 
 // --- Start the Server ---
-const PORT = process.env.PORT || 8999;
+const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
     console.log(`Server is live and listening on http://localhost:${PORT}`);
 });
