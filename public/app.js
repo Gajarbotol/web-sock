@@ -9,15 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
     const closeModalButton = modal.querySelector('.close-button');
-    const commandInput = document.getElementById('command-input');
-    const sendInputCommandButton = document.getElementById('send-input-command');
 
     let socket;
     let selectedUuid = null;
-    let commandWithInput = null;
 
     // --- Command Definitions ---
-    // Defines all available commands, their names, and if they need user input.
     const commands = [
         { name: 'Apps', command: 'apps' },
         { name: 'Device Info', command: 'device_info' },
@@ -41,11 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Connects to the WebSocket server.
-     * Automatically tries to reconnect on failure.
      */
     function connect() {
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // Connect to the special '/panel' path
         socket = new WebSocket(`${wsProtocol}//${window.location.host}/panel`);
 
         socket.onopen = () => {
@@ -73,8 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Handles all incoming messages from the server.
-     * @param {object} data - The parsed JSON data from the server.
+     * Handles incoming messages from the server.
      */
     function handleServerMessage({ type, payload }) {
         switch (type) {
@@ -102,16 +95,18 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'location_received':
                 addLog(`📍 Location: <a href="https://www.google.com/maps?q=${payload.lat},${payload.lon}" target="_blank">View on Map</a>`, 'info', payload.deviceName);
                 break;
+            // --- ENHANCED: File handling case ---
             case 'file_received':
+                addLog(`📁 File Received: <a href="${payload.downloadPath}" target="_blank" download="${payload.filename}">${payload.filename}</a>`, 'info', payload.deviceName);
+                break;
             case 'device_log':
                 addLog(payload.message, 'info', payload.deviceName);
                 break;
         }
     }
-
+    
     /**
      * Renders a device card in the UI.
-     * @param {object} device - The device information.
      */
     function renderDevice(device) {
         let card = document.getElementById(device.uuid);
@@ -134,26 +129,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Displays the command modal for a selected device.
-     * @param {object} device - The device to send commands to.
+     * Displays the command modal.
      */
     function openCommandModal(device) {
         selectedUuid = device.uuid;
         modalTitle.textContent = `Commands for ${device.model}`;
-        modalBody.innerHTML = ''; // Clear previous buttons
+        modalBody.innerHTML = '';
 
         commands.forEach(cmd => {
             const button = document.createElement('button');
             button.className = 'command-button';
             button.textContent = cmd.name;
+            // --- ENHANCED: Use prompt for input ---
             button.onclick = () => {
+                // If the command needs input, show a prompt pop-up
                 if (cmd.input) {
-                    commandWithInput = cmd.command;
-                    commandInput.placeholder = cmd.input;
-                    commandInput.focus();
+                    const parameter = prompt(cmd.input);
+                    // Only send command if user entered something and didn't cancel
+                    if (parameter && parameter.trim() !== "") {
+                        sendCommand(cmd.command, parameter);
+                        modal.style.display = 'none';
+                    }
                 } else {
+                    // Otherwise, send the command directly
                     sendCommand(cmd.command);
-                    modal.style.display = 'none'; // Close modal for simple commands
+                    modal.style.display = 'none';
                 }
             };
             modalBody.appendChild(button);
@@ -163,30 +163,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Sends a command object to the server via WebSocket.
-     * @param {string} command - The base command string.
-     * @param {string|null} parameter - The optional parameter for the command.
+     * Sends a command to the server.
      */
     function sendCommand(command, parameter = null) {
         let fullCommand = command;
         if (parameter) {
             fullCommand += `:${parameter}`;
         }
-
         socket.send(JSON.stringify({
             type: 'command',
-            payload: {
-                uuid: selectedUuid,
-                command: fullCommand
-            }
+            payload: { uuid: selectedUuid, command: fullCommand }
         }));
-
         addLog(`🚀 Sending command '${fullCommand}'`, 'system');
-
-        // Reset input field
-        commandInput.value = '';
-        commandInput.placeholder = 'Enter parameter for command...';
-        commandWithInput = null;
     }
 
     // --- UI Helpers ---
@@ -207,18 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
-    sendInputCommandButton.addEventListener('click', () => {
-        if(commandWithInput && commandInput.value){
-            sendCommand(commandWithInput, commandInput.value);
-        }
-    });
-
-    commandInput.addEventListener('keypress', (e) => {
-        if(e.key === 'Enter' && commandWithInput && commandInput.value) {
-            sendCommand(commandWithInput, commandInput.value);
-        }
-    });
-
     closeModalButton.addEventListener('click', () => {
         modal.style.display = 'none';
     });
@@ -226,3 +202,4 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Initial Kickoff ---
     connect();
 });
+
