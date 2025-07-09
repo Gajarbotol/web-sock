@@ -3,37 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Android Device Management Panel</title>
+    <title>Android Device Management</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-50 font-sans">
+    <!-- Navigation Bar -->
+    <nav class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">Android Device Management</h1>
+            <div>
+                <button onclick="fetchDevices()" class="text-white hover:text-gray-200 mx-2"><i class="fas fa-sync"></i> Refresh</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
     <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Android Device Management Panel</h1>
+        <!-- Loading Spinner -->
+        <div id="loading" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
 
         <!-- Devices Section -->
         <div class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">Connected Devices</h2>
-            <div id="devices-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Connected Devices</h2>
+            <div id="devices-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
         <!-- Files Section -->
         <div class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4">Uploaded Files</h2>
-            <div id="files-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Uploaded Files</h2>
+            <div id="files-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
         <!-- Command Modal -->
         <div id="command-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-            <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-                <h3 class="text-xl font-semibold mb-4">Execute Command</h3>
-                <form id="command-form">
+            <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Execute Command</h3>
+                <form id="command-form" class="space-y-4">
                     <input type="hidden" id="command-uuid" name="uuid">
                     <input type="hidden" id="command-type" name="command">
-                    <div id="command-inputs" class="space-y-4"></div>
-                    <div class="flex justify-end space-x-2 mt-4">
-                        <button type="button" id="cancel-command" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Execute</button>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Device</label>
+                        <p id="command-device" class="mt-1 text-gray-600"></p>
+                    </div>
+                    <div id="command-inputs"></div>
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" id="cancel-command" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition">Cancel</button>
+                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Execute</button>
                     </div>
                 </form>
             </div>
@@ -41,10 +60,10 @@
 
         <!-- Response Modal -->
         <div id="response-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-            <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-                <h3 class="text-xl font-semibold mb-4">Response</h3>
-                <p id="response-message" class="mb-4"></p>
-                <button id="close-response" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Close</button>
+            <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Response</h3>
+                <p id="response-message" class="mb-4 text-gray-600"></p>
+                <button id="close-response" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Close</button>
             </div>
         </div>
     </div>
