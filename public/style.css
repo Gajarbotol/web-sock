@@ -1,220 +1,23 @@
-/* --- Global Variables & Basic Setup --- */
-:root {
-    --bg-color: #1a1a2e;
-    --primary-color: #16213e;
-    --secondary-color: #0f3460;
-    --accent-color: #e94560;
-    --font-color: #e0e0e0;
-    --font-color-dark: #a0a0a0;
-    --success-color: #2ecc71;
-    --error-color: #e74c3c;
-    --border-radius: 8px;
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-body {
-    font-family: 'Roboto', sans-serif;
-    background-color: var(--bg-color);
-    color: var(--font-color);
-    margin: 0;
-    line-height: 1.6;
-}
-
-/* --- Header & Main Layout --- */
-header {
-    background-color: var(--primary-color);
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid var(--secondary-color);
-}
-
-h1, h2, h3 {
-    color: var(--font-color);
-    font-weight: 500;
-}
-
-.container {
-    display: flex;
-    padding: 2rem;
-    gap: 2rem;
-}
-
-.column {
-    background-color: var(--primary-color);
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    flex-grow: 1;
-}
-
-#devices-column { flex-basis: 40%; }
-#logs-column { flex-basis: 60%; }
-
-#device-list, #log-output {
-    max-height: 75vh;
-    overflow-y: auto;
-    padding-right: 10px;
-}
-
-/* --- Device Card Styling --- */
 .device-card {
-    background-color: var(--secondary-color);
-    border-left: 5px solid var(--accent-color);
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    @apply bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition;
 }
 
-.device-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+.file-card {
+    @apply bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition;
 }
 
-.device-card h4 {
-    margin: 0 0 10px 0;
-    color: var(--font-color);
+.file-preview img, .file-preview video {
+    @apply w-full h-48 object-cover rounded;
 }
 
-.device-info p {
-    margin: 4px 0;
-    font-size: 0.9rem;
-    color: var(--font-color-dark);
+.file-preview audio {
+    @apply w-full;
 }
 
-/* --- Log & Status Styling --- */
-#log-output {
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 0.9rem;
-}
-
-.log-entry {
-    padding: 8px;
-    border-bottom: 1px solid #2a2a4a;
-    word-break: break-all;
-}
-.log-entry a {
-    color: var(--accent-color);
-    text-decoration: none;
-    font-weight: bold;
-}
-.log-entry a:hover {
-    text-decoration: underline;
-}
-.log-entry.system { color: var(--success-color); }
-.log-entry.error { color: var(--error-color); }
-.log-entry strong { color: var(--accent-color); }
-
-#connection-status {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-weight: 700;
-    transition: background-color 0.3s ease;
-}
-#connection-status span {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    transition: background-color 0.3s ease;
-}
-.status-disconnected { background-color: var(--error-color); }
-.status-disconnected span { background-color: #fff; }
-.status-connected { background-color: var(--success-color); }
-.status-connected span { background-color: #fff; animation: pulse 2s infinite; }
-
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(255,255,255, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(255,255,255, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(255,255,255, 0); }
-}
-
-/* --- Command Modal Styling --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(5px);
-}
-.modal-content {
-    background: var(--primary-color);
-    padding: 2rem;
-    border-radius: var(--border-radius);
-    width: 90%;
-    max-width: 600px;
-    position: relative;
-    animation: slide-down 0.3s ease-out;
-}
-@keyframes slide-down {
-    from { transform: translateY(-30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-.close-button {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: var(--font-color);
-    cursor: pointer;
-}
-.command-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1rem;
-}
-.command-button {
-    background-color: var(--secondary-color);
-    color: var(--font-color);
-    border: 1px solid var(--accent-color);
-    padding: 12px;
-    border-radius: var(--border-radius);
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.2s;
-}
-.command-button:hover {
-    background-color: var(--accent-color);
-}
-
-
-/* --- Custom Scrollbar --- */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: var(--secondary-color); }
-::-webkit-scrollbar-thumb { background: var(--accent-color); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #ff637f; }
-
-/* --- NEW: Responsive Design for Mobile --- */
-@media (max-width: 768px) {
-    .container {
-        flex-direction: column;
-        padding: 1rem;
-        gap: 1rem;
-    }
-    header {
-        padding: 1rem;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .modal-content {
-        padding: 1.5rem;
-    }
-    .command-grid {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 0.5rem;
-    }
-    h1 {
-      font-size: 1.5rem;
-    }
+button {
+    @apply transition duration-200;
 }
