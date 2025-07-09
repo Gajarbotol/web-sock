@@ -3,70 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Android Device Management</title>
+    <title>Android Device Control - GAJARBOTOL</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
 </head>
-<body class="bg-gray-50 font-sans">
-    <!-- Navigation Bar -->
-    <nav class="bg-blue-600 text-white p-4 shadow-md">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold">Android Device Management</h1>
-            <div>
-                <button onclick="fetchDevices()" class="text-white hover:text-gray-200 mx-2"><i class="fas fa-sync"></i> Refresh</button>
+<body class="bg-black font-fira-code text-green-400 transition-colors duration-300">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="bg-gray-900 text-green-400 w-64 fixed h-full p-4 shadow-lg transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-50" id="sidebar">
+            <div class="flex items-center mb-6">
+                <i class="fas fa-terminal text-green-400 text-2xl mr-2"></i>
+                <h1 class="text-xl font-bold">Device Control</h1>
             </div>
-        </div>
-    </nav>
+            <nav class="space-y-3">
+                <button onclick="showSection('devices')" class="flex items-center w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800 hover:text-green-300 transition"><i class="fas fa-mobile-alt mr-2"></i>Devices</button>
+                <button onclick="showSection('files')" class="flex items-center w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800 hover:text-green-300 transition"><i class="fas fa-file mr-2"></i>Files</button>
+                <button onclick="toggleDarkMode()" class="flex items-center w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800 hover:text-green-300 transition"><i class="fas fa-moon mr-2"></i>Toggle Theme</button>
+            </nav>
+            <div class="absolute bottom-4 text-sm text-green-600">Developed by GAJARBOTOL</div>
+        </aside>
 
-    <!-- Main Content -->
-    <div class="container mx-auto p-4">
-        <!-- Loading Spinner -->
-        <div id="loading" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center hidden">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-6 ml-0 md:ml-64 transition-all duration-300">
+            <button class="md:hidden text-green-400 mb-4" onclick="toggleSidebar()"><i class="fas fa-bars text-2xl"></i></button>
+            <div class="container mx-auto">
+                <!-- Loading Spinner -->
+                <div id="loading" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+                    <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-green-400"></div>
+                </div>
 
-        <!-- Devices Section -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Connected Devices</h2>
-            <div id="devices-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        </div>
+                <!-- Devices Section -->
+                <section id="devices-section" class="mb-8">
+                    <h2 class="text-2xl font-bold mb-4 text-green-400 flex items-center"><i class="fas fa-mobile-alt mr-2"></i>Connected Devices</h2>
+                    <div id="devices-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </section>
 
-        <!-- Files Section -->
-        <div class="mb-8">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Uploaded Files</h2>
-            <div id="files-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-        </div>
+                <!-- Files Section -->
+                <section id="files-section" class="mb-8 hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-green-400 flex items-center"><i class="fas fa-file mr-2"></i>Uploaded Files</h2>
+                    <div id="files-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </section>
 
-        <!-- Command Modal -->
-        <div id="command-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-            <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-                <h3 class="text-xl font-semibold mb-4 text-gray-800">Execute Command</h3>
-                <form id="command-form" class="space-y-4">
-                    <input type="hidden" id="command-uuid" name="uuid">
-                    <input type="hidden" id="command-type" name="command">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Device</label>
-                        <p id="command-device" class="mt-1 text-gray-600"></p>
+                <!-- Command Modal -->
+                <div id="command-modal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden">
+                    <div class="bg-gray-900 text-green-400 p-6 rounded-lg shadow-lg shadow-green-500/50 max-w-md w-full transform scale-95 modal">
+                        <h3 class="text-xl font-bold mb-4">Execute Command</h3>
+                        <form id="command-form" class="space-y-4">
+                            <input type="hidden" id="command-uuid" name="uuid">
+                            <input type="hidden" id="command-type" name="command">
+                            <div>
+                                <label class="block text-sm font-medium">Device</label>
+                                <p id="command-device" class="mt-1 text-green-300"></p>
+                            </div>
+                            <div id="command-inputs"></div>
+                            <div class="flex justify-end space-x-2">
+                                <button type="button" id="cancel-command" class="bg-gray-700 text-green-400 px-4 py-2 rounded-lg hover:bg-gray-600 transition">Cancel</button>
+                                <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-500 transition">Execute</button>
+                            </div>
+                        </form>
                     </div>
-                    <div id="command-inputs"></div>
-                    <div class="flex justify-end space-x-2">
-                        <button type="button" id="cancel-command" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition">Cancel</button>
-                        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Execute</button>
-                    </div>
-                </form>
+                </div>
             </div>
-        </div>
-
-        <!-- Response Modal -->
-        <div id="response-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
-            <div class="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
-                <h3 class="text-xl font-semibold mb-4 text-gray-800">Response</h3>
-                <p id="response-message" class="mb-4 text-gray-600"></p>
-                <button id="close-response" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Close</button>
-            </div>
-        </div>
+            <footer class="text-center text-sm text-green-600 mt-8">Developed by GAJARBOTOL &copy; 2025</footer>
+        </main>
     </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 space-y-2"></div>
+
     <script src="/script.js"></script>
 </body>
 </html>
