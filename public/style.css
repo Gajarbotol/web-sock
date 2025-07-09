@@ -2,43 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    html {
+        @apply font-fira-code;
+    }
+}
+
 .device-card {
-    @apply bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200;
+    @apply bg-gray-900 text-green-400 p-5 rounded-lg shadow-md shadow-green-500/20 hover:shadow-green-500/40 transform hover:scale-105 transition-all duration-300 border border-green-800/50;
 }
 
 .file-card {
-    @apply bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200;
+    @apply bg-gray-900 text-green-400 p-5 rounded-lg shadow-md shadow-green-500/20 hover:shadow-green-500/40 transform hover:scale-105 transition-all duration-300 border border-green-800/50;
 }
 
 .file-preview img, .file-preview video {
-    @apply w-full h-48 object-cover rounded-md;
+    @apply w-full h-40 object-cover rounded-lg relative;
 }
 
 .file-preview audio {
     @apply w-full mt-2;
 }
 
+.file-preview .overlay {
+    @apply absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300;
+}
+
 button {
-    @apply transition duration-300 text-lg py-3 px-5; /* Larger touch targets */
+    @apply transition duration-300 text-base py-2 px-4 rounded-lg;
 }
 
 select, input {
-    @apply transition duration-200 border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    @apply transition duration-200 bg-gray-800 border-green-600 text-green-400 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500;
 }
 
 .modal {
-    @apply transform transition-all duration-300 scale-95;
+    @apply transform transition-all duration-300;
 }
 
 .modal-open {
     @apply scale-100;
 }
 
-/* Android-inspired button styling */
-.bg-blue-500 {
-    @apply bg-blue-600; /* Material Design blue */
+.toast {
+    @apply p-3 rounded-lg shadow-lg shadow-green-500/20 text-green-400 transform transition-opacity duration-300;
 }
 
-.bg-red-500 {
-    @apply bg-red-600; /* Material Design red */
+.animate-fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Light mode (optional toggle) */
+body.light {
+    @apply bg-gray-100 text-gray-800;
+}
+
+body.light .device-card, body.light .file-card {
+    @apply bg-white text-gray-800 border-gray-200 shadow-md hover:shadow-lg;
+}
+
+body.light .modal {
+    @apply bg-white text-gray-800;
+}
+
+body.light select, body.light input {
+    @apply bg-white border-gray-300 text-gray-800;
+}
+
+body.light .toast {
+    @apply text-gray-800;
+}
+
+/* Sidebar toggle for mobile */
+#sidebar {
+    @apply z-50;
+}
+
+#sidebar.open {
+    @apply translate-x-0;
 }
