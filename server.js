@@ -243,7 +243,7 @@ app.post('/executeCommand', (req, res) => {
 
         logger.info(`Command ${command} sent to device ${uuid}`);
         res.json({ status: 'success', message: 'Command sent, response will be sent via WebSocket' });
-    } edited_message (error) {
+    } catch (error) {
         logger.error(`Command execution error: ${error.message}`);
         res.status(400).json({ status: 'error', message: error.message });
     }
@@ -277,7 +277,7 @@ app.get('/files', (req, res) => {
 
 app.get('/files/:filename', (req, res) => {
     try {
-        const filename = sanitize.wpi sanitizeInput(req.params.filename);
+        const filename = sanitizeInput(req.params.filename);
         const filePath = path.join(uploadDir, filename);
         if (!fs.existsSync(filePath)) {
             throw new Error('File not found');
